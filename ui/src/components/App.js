@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { Fragment, useState } from 'react';
 
-import { Box, Heading } from 'rebass';
+import { Box, Heading, Button } from 'rebass';
 
-import { listPrefixes, listPrefixKeys } from '../api';
+import {
+  listPrefixes,
+  listPrefixKeys,
+} from '../api';
 
 const initialState = {
   prefixes: [],
   selectedPrefix: '',
+  output: '',
 }
 
 const App = () => {
@@ -22,6 +26,9 @@ const App = () => {
     ...state,
     selectedPrefix: prefix,
   });
+
+  const getKeysHandler = () => listPrefixKeys(state.selectedPrefix)
+    .then((response) => setState({ ...state, output: JSON.stringify(response) }))
 
   return (
     <Box>
@@ -40,6 +47,19 @@ const App = () => {
       </Box>
       <Box>
         <Heading fontSize={5}>Prefix: {state.selectedPrefix}</Heading>
+        {state.selectedPrefix && (
+          <Fragment>
+            <Button color='black' onClick={getKeysHandler}>Get Keys</Button>
+            <Button>Get Logs</Button>
+            <Button>Tail Logs</Button>
+          </Fragment>
+        )}
+      </Box>
+      <Box>
+        <Heading fontSize={5}>Output</Heading>
+        <Box pad={5}>
+          {state.output}
+        </Box>
       </Box>
     </Box>
   )
