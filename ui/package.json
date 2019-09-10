@@ -1,5 +1,5 @@
 {
-  "name": "Lumberman Web Client",
+  "name": "lumberman-web-client",
   "description": "",
   "version": "0.1.0",
   "author": "Sean Nakamura <seanenakamura@gmail.com>",
@@ -9,8 +9,10 @@
     "build": "gatsby build"
   },
   "dependencies": {
+    "@rebass/grid": "^6.1.0",
     "gatsby": "^2.15.14",
     "react": "^16.9.0",
-    "react-dom": "^16.9.0"
+    "react-dom": "^16.9.0",
+    "rebass": "^4.0.5"
   }
 }
