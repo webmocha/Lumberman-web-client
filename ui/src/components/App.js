@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
-import { Box, Heading } from 'rebass';
+import { Box, Heading, Text } from 'rebass';
 
-import { listPrefixes } from '../api';
+import { listPrefixes, listPrefixKeys } from '../api';
 
 const initialState = {
   prefixes: [],
-  key: '',
+  selectedPrefix: '',
 }
 
 const App = () => {
@@ -18,13 +18,28 @@ const App = () => {
     }))
   }, []);
 
+  const loadPrefixKeys = (prefix) => () => setState({
+    ...state,
+    selectedPrefix: prefix,
+  });
+
   return (
     <Box>
       <Box>
         <Heading fontSize={5}>Prefixes</Heading>
         <ul>
-          {state.prefixes.map(prefix => <li key={prefix}>{prefix}</li>)}
+          {state.prefixes.map(prefix => (
+            <li
+              key={prefix}
+              onClick={loadPrefixKeys(prefix)}
+            >
+              {prefix}
+            </li>
+          ))}
         </ul>
+      </Box>
+      <Box>
+        <Heading fontSize={5}>Prefix: {state.selectedPrefix}</Heading>
       </Box>
     </Box>
   )
