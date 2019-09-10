@@ -32,10 +32,33 @@ const App = () => {
     .then(({ keys }) => setState({
       ...state,
       output: keys,
-    }))
+    }));
 
   const getLogsHandler = () => getLogsStream(state.selectedPrefix)
-    .then((response) => setState({ ...state, output: response }))
+    .then((response) => setState({ ...state, output: response }));
+
+  const tailLogsHandler = () => {
+    let stream;
+    if (!!window.EventSource) {
+      stream = new EventSource(`/api/tail-logs-stream?prefix=${state.selectedPrefix}`);
+    } else {
+      console.warn('Streaming is not available on your client');
+      return null;
+    }
+
+    stream.addEventListener('message', (e) => {
+      console.log(e.data);
+    }, false)
+
+    stream.addEventListener('open', (e) => {
+      console.log('opened!')
+      console.log(e)
+    }, false)
+
+    stream.addEventListener('error', (e) => {
+      console.log(e.readyState);
+    }, false)
+  };
 
   return (
     <Box>
@@ -58,7 +81,7 @@ const App = () => {
           <Fragment>
             <Button color='black' onClick={getKeysHandler}>Get Keys</Button>
             <Button color='black' onClick={getLogsHandler}>Get Logs</Button>
-            <Button color='black' onClick={() => {}}>Tail Logs</Button>
+            <Button color='black' onClick={tailLogsHandler}>Tail Logs</Button>
           </Fragment>
         )}
       </Box>
