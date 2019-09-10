@@ -1,7 +1,9 @@
-import React from "react";
+import React from 'react';
 
-const App = () => (
-  <h1>Hello World</h1>
+import App from '../components/App';
+
+const IndexPage = () => (
+  <App />
 );
 
-export default App;
+export default IndexPage;
