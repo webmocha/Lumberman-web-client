@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/golang/protobuf/jsonpb"
 	pb "github.com/webmocha/lumberman/pb"
@@ -21,26 +20,26 @@ var (
 type UnsubscribeFunc func() error
 
 type Subscriber interface {
-	Subscribe(c chan []byte) (UnsubscribeFunc, error)
+	Subscribe(c chan *pb.LogDetail) (UnsubscribeFunc, error)
 }
 
-type Notifier interface {
-	Notify(b []byte) error
+type Broadcaster interface {
+	Send(b []byte) error
 }
 
-type NotificationCenter struct {
-	subscribers   map[chan []byte]struct{}
+type Switchboard struct {
+	subscribers   map[chan *pb.LogDetail]struct{}
 	subscribersMu *sync.Mutex
 }
 
-func NewNotificationCenter() *NotificationCenter {
-	return &NotificationCenter{
-		subscribers:   map[chan []byte]struct{}{},
+func NewSwitchboard() *Switchboard {
+	return &Switchboard{
+		subscribers:   map[chan *pb.LogDetail]struct{}{},
 		subscribersMu: &sync.Mutex{},
 	}
 }
 
-func (nc *NotificationCenter) Subscribe(c chan []byte) (UnsubscribeFunc, error) {
+func (nc *Switchboard) Subscribe(c chan *pb.LogDetail) (UnsubscribeFunc, error) {
 	nc.subscribersMu.Lock()
 	nc.subscribers[c] = struct{}{}
 	nc.subscribersMu.Unlock()
@@ -56,7 +55,7 @@ func (nc *NotificationCenter) Subscribe(c chan []byte) (UnsubscribeFunc, error) 
 	return unsubscribeFn, nil
 }
 
-func (nc *NotificationCenter) Notify(b []byte) error {
+func (nc *Switchboard) Send(b *pb.LogDetail) error {
 	nc.subscribersMu.Lock()
 	defer nc.subscribersMu.Unlock()
 
@@ -134,7 +133,7 @@ func handleGetLogsStream(lmc *lmClient) http.HandlerFunc {
 func handleTailLogsStream(lmc *lmClient, s Subscriber) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Subscribe
-		c := make(chan []byte)
+		c := make(chan *pb.LogDetail)
 		unsubscribeFn, err := s.Subscribe(c)
 		if err != nil {
 			log.Println(err.Error())
@@ -157,7 +156,31 @@ func handleTailLogsStream(lmc *lmClient, s Subscriber) http.HandlerFunc {
 		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Connection", "keep-alive")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		lmc.TailLogsStream(prefix, s, unsubscribeFn, w)
+		go lmc.TailLogsStream(prefix, c)
+
+	Looping:
+		for {
+			select {
+			case <-r.Context().Done():
+				if err := unsubscribeFn(); err != nil {
+					log.Println(err.Error())
+					http.Error(w, `{"error": "Internal Server Error"}`, http.StatusInternalServerError)
+					return
+				}
+				break Looping
+
+			default:
+				logReply := <-c
+				mErr := lmc.m.Marshal(w, logReply)
+				if mErr != nil {
+					http.Error(w, `{"error": "Internal Server Error"}`, http.StatusInternalServerError)
+					log.Printf("Error Marshaling TailLogStream.Recv()\n%v\n", mErr)
+				}
+				w.Write([]byte("\n"))
+				w.(http.Flusher).Flush()
+			}
+		}
+
 	}
 }
 
@@ -175,24 +198,14 @@ func main() {
 		m:      &jsonpb.Marshaler{},
 	}
 
-	nc := NewNotificationCenter()
-
-	go func() {
-		for {
-			b := []byte(time.Now().Format(time.RFC3339))
-			if err := nc.Notify(b); err != nil {
-				log.Fatal(err)
-			}
-			time.Sleep(1 * time.Second)
-		}
-	}()
+	sb := NewSwitchboard()
 
 	http.Handle("/", http.FileServer(http.Dir("static/")))
 	http.HandleFunc("/api/list-prefixes", handleListPrefixes(lmc))
 	http.HandleFunc("/api/list-keys", handleListKeys(lmc))
 	http.HandleFunc("/api/get-log", handleGetLog(lmc))
 	http.HandleFunc("/api/get-logs-stream", handleGetLogsStream(lmc))
-	http.HandleFunc("/api/tail-logs-stream", handleTailLogsStream(lmc, nc))
+	http.HandleFunc("/api/tail-logs-stream", handleTailLogsStream(lmc, sb))
 
 	fmt.Printf("Listening on port %d\n", *port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), nil))
