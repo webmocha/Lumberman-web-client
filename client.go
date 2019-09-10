@@ -107,7 +107,7 @@ func (l *lmClient) GetLogsStream(prefix string, w http.ResponseWriter) {
 	}
 }
 
-func (l *lmClient) TailLogsStream(prefix string, c chan *pb.LogDetail) {
+func (l *lmClient) TailLogsStream(prefix string) {
 	ctx := context.Background()
 
 	stream, err := l.client.TailLogStream(ctx, &pb.PrefixRequest{
@@ -128,7 +128,9 @@ func (l *lmClient) TailLogsStream(prefix string, c chan *pb.LogDetail) {
 			return
 		}
 
-		c <- logReply
+		if !sb.Broadcast(prefix, logReply) {
+			return
+		}
 	}
 }
 
