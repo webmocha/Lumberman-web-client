@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { Box, Heading, Text } from 'rebass';
+import { Box, Heading } from 'rebass';
 
 import { listPrefixes, listPrefixKeys } from '../api';
 
@@ -18,7 +18,7 @@ const App = () => {
     }))
   }, []);
 
-  const loadPrefixKeys = (prefix) => () => setState({
+  const selectPrefixHandler = (prefix) => () => setState({
     ...state,
     selectedPrefix: prefix,
   });
@@ -31,7 +31,7 @@ const App = () => {
           {state.prefixes.map(prefix => (
             <li
               key={prefix}
-              onClick={loadPrefixKeys(prefix)}
+              onClick={selectPrefixHandler(prefix)}
             >
               {prefix}
             </li>
