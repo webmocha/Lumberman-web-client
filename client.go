@@ -101,13 +101,13 @@ func (l *lmClient) GetLogsStream(prefix string, w http.ResponseWriter) {
 
 		mErr := l.m.Marshal(w, logReply)
 		if mErr != nil {
-			log.Printf("Error Marshaling GetLog()\n%v\n", mErr)
+			log.Printf("Error Marshaling GetLogStream.Recv()\n%v\n", mErr)
 		}
 		w.Write([]byte("\n"))
 	}
 }
 
-func (l *lmClient) TailLogsStream(prefix string, s Subscriber, unsubscribeFn UnsubscribeFunc, w http.ResponseWriter) {
+func (l *lmClient) TailLogsStream(prefix string) {
 	ctx := context.Background()
 
 	stream, err := l.client.TailLogStream(ctx, &pb.PrefixRequest{
@@ -120,24 +120,17 @@ func (l *lmClient) TailLogsStream(prefix string, s Subscriber, unsubscribeFn Uns
 	for {
 		logReply, err := stream.Recv()
 		if err == io.EOF {
-			if err := unsubscribeFn(); err != nil {
-				log.Println(err.Error())
-				http.Error(w, `{"error": "Internal Server Error"}`, http.StatusInternalServerError)
-				return
-			}
+			log.Println(err.Error())
 			break
 		}
 		if err != nil {
 			log.Println(handleCallError("TailLogStream.Recv", err))
 			return
 		}
-		mErr := l.m.Marshal(w, logReply)
-		if mErr != nil {
-			log.Printf("Error Marshaling GetLog()\n%v\n", mErr)
-		}
-		// w.Write([]byte("\n"))
 
-		w.(http.Flusher).Flush()
+		if !sb.Broadcast(prefix, logReply) {
+			return
+		}
 	}
 }
 
