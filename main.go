@@ -187,7 +187,7 @@ func main() {
 		}
 	}()
 
-	http.Handle("/", http.FileServer(http.Dir("static/")))
+	http.Handle("/", http.FileServer(http.Dir("ui/public")))
 	http.HandleFunc("/api/list-prefixes", handleListPrefixes(lmc))
 	http.HandleFunc("/api/list-keys", handleListKeys(lmc))
 	http.HandleFunc("/api/get-log", handleGetLog(lmc))
