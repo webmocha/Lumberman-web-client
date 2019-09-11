@@ -8,31 +8,48 @@ import {
   getLogsStream,
 } from '../api';
 
+const initialState = {
+  prefixes: [],
+  selectedPrefix: '',
+  output: [],
+};
+
 const App = () => {
   let stream;
-  const [prefixes, setPrefixes] = useState([]);
-  const [selectedPrefix, setSelectedPrefix] = useState('');
-  const [output, setOutput] = useState([]);
+
+  const checkStreamState = () => {
+    return stream && stream.close();
+  }
+
+  const [prefixes, setPrefixes] = useState(initialState.prefixes);
+  const [selectedPrefix, setSelectedPrefix] = useState(initialState.selectedPrefix);
+  const [output, setOutput] = useState(initialState.output);
 
   React.useEffect(() => {
     listPrefixes().then(({ prefixes }) => setPrefixes(prefixes))
   }, []);
 
-  const selectPrefixHandler = (prefix) => () => setSelectedPrefix(prefix);
+  const selectPrefixHandler = (prefix) => {
+    checkStreamState();
+    setSelectedPrefix(prefix);
+  }
 
   const getKeysHandler = () => {
-    console.log(output)
-    listPrefixKeys(selectedPrefix)
+    checkStreamState();
+    setOutput(initialState.output);
+    return listPrefixKeys(selectedPrefix)
       .then(({ keys }) => setOutput(keys));
   }
 
   const getLogsHandler = () => {
-    console.log(output)
-    getLogsStream(selectedPrefix)
+    checkStreamState();
+    setOutput(initialState.output);
+    return getLogsStream(selectedPrefix)
       .then(setOutput)
   };
 
   const tailLogsHandler = () => {
+    setOutput(initialState.output);
     if (!!window.EventSource) {
       stream = new EventSource(`/api/tail-logs-stream?prefix=${selectedPrefix}`);
     } else {
@@ -42,11 +59,11 @@ const App = () => {
 
     stream.addEventListener('log', (e) => {
       setOutput(s => [...s, e.data]);
-    })
+    }, false);
 
     stream.addEventListener('error', (e) => {
       console.log(e.readyState);
-    }, false)
+    }, false);
   };
 
   return (
@@ -57,7 +74,7 @@ const App = () => {
           {prefixes.map(prefix => (
             <li
               key={prefix}
-              onClick={selectPrefixHandler(prefix)}
+              onClick={() =>selectPrefixHandler(prefix)}
             >
               {prefix}
             </li>
