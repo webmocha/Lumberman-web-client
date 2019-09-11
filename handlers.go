@@ -106,12 +106,14 @@ func handleTailLogsStream(lmc *lmClient, sb *Switchboard) http.HandlerFunc {
 			default:
 				logReply := <-s.C
 
+				w.Write([]byte("event: log\n"))
+				w.Write([]byte("data: "))
 				mErr := lmc.m.Marshal(w, logReply)
 				if mErr != nil {
 					http.Error(w, `{"error": "Internal Server Error"}`, http.StatusInternalServerError)
 					log.Printf("Error Marshaling TailLogStream.Recv()\n%v\n", mErr)
 				}
-				w.Write([]byte("\n"))
+				w.Write([]byte("\n\n"))
 				w.(http.Flusher).Flush()
 
 			}
