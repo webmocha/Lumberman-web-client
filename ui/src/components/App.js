@@ -17,8 +17,8 @@ const initialState = {
 const App = () => {
   let stream;
 
-  const checkStreamState = () => {
-    return stream && stream.close();
+  const closeStreamState = () => {
+    return stream ? stream.close() : false;
   }
 
   const [prefixes, setPrefixes] = useState(initialState.prefixes);
@@ -30,19 +30,20 @@ const App = () => {
   }, []);
 
   const selectPrefixHandler = (prefix) => {
-    checkStreamState();
+    closeStreamState();
     setSelectedPrefix(prefix);
+    setOutput(initialState.output)
   }
 
   const getKeysHandler = () => {
-    checkStreamState();
+    closeStreamState();
     setOutput(initialState.output);
     return listPrefixKeys(selectedPrefix)
       .then(({ keys }) => setOutput(keys));
   }
 
   const getLogsHandler = () => {
-    checkStreamState();
+    closeStreamState();
     setOutput(initialState.output);
     return getLogsStream(selectedPrefix)
       .then(setOutput)
