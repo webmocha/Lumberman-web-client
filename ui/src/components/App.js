@@ -1,6 +1,6 @@
 import React, { Fragment, useState } from 'react';
 
-import { Box, Heading, Button } from 'rebass';
+import { Box, Heading, Button, Text } from 'rebass';
 
 import {
   listPrefixes,
@@ -69,7 +69,7 @@ const App = () => {
   return (
     <Box>
       <Box>
-        <Heading fontSize={5}>Prefixes</Heading>
+        <Heading color='primary' fontSize={5}>Prefixes</Heading>
         <ul>
           {prefixes.map(prefix => (
             <li
@@ -82,20 +82,31 @@ const App = () => {
         </ul>
       </Box>
       <Box>
-        <Heading fontSize={5}>Prefix: {selectedPrefix}</Heading>
+        <Heading color='primary' fontSize={5}>Prefix: <Text as='span' color='#ed2dfd'>{selectedPrefix}</Text></Heading>
         {selectedPrefix && (
-          <Fragment>
-            <Button color='black' onClick={getKeysHandler}>Get Keys</Button>
-            <Button color='black' onClick={getLogsHandler}>Get Logs</Button>
-            <Button color='black' onClick={tailLogsHandler}>Tail Logs</Button>
-          </Fragment>
+          <Box
+            flex={true}
+            justifyContent='end'
+          >
+            <Button variant='outline' onClick={getKeysHandler}>Get Keys</Button>
+            <Button variant='outline' onClick={getLogsHandler}>Get Logs</Button>
+            <Button variant='outline' onClick={tailLogsHandler}>Tail Logs</Button>
+          </Box>
         )}
       </Box>
       <Box>
-        <Heading fontSize={5}>Output</Heading>
-        <Box pad={5}>
+        <Heading color='primary' fontSize={5}>Output</Heading>
+        <Box
+          p={10}
+          bg='#e6e6e6'
+          flexGrow={true}
+          border
+          sx={{
+            borderRadius: 10,
+          }}
+        >
           {output && output.map(item => (
-            <li key={item}>{item}</li>
+            <Text key={item}><Text as='span' fontSize={12}>></Text> {item}</Text>
           ))}
         </Box>
       </Box>
