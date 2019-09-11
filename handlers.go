@@ -105,6 +105,7 @@ func handleTailLogsStream(lmc *lmClient, sb *Switchboard) http.HandlerFunc {
 
 			default:
 				logReply := <-s.C
+
 				w.Write([]byte("event: log\n"))
 				w.Write([]byte("data: "))
 				mErr := lmc.m.Marshal(w, logReply)
