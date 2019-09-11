@@ -1,13 +1,23 @@
-FROM golang as build
+FROM golang as build-api
 
 WORKDIR /app
-ADD . /app
-RUN cd /app && \
-  make build-linux64
+ADD go.mod go.sum /app/
+RUN go mod download
+ADD Makefile *.go /app/
+RUN make build-linux64
 
-FROM alpine
+FROM node:alpine as build-ui
 
-COPY --from=build /app/bin/lumberman-web-client /
+WORKDIR /app
+ADD ./ui/package.json ./ui/yarn.lock /app/
+RUN yarn
+ADD ./ui /app
+RUN yarn build
+
+FROM scratch
+
+COPY --from=build-api /app/bin/lumberman-web-client /
+COPY --from=build-ui /app/public /ui/public
 
 EXPOSE 80
 

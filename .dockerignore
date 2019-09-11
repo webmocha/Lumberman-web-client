@@ -1,0 +1,10 @@
+# Ignore everything
+**
+
+# Allow files and directories
+!*.go
+!go.*
+!Makefile
+!ui/src
+!ui/*.js*
+!ui/*.lock

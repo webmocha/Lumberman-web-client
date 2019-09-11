@@ -22,7 +22,7 @@ func main() {
 
 	conn, err := grpc.Dial(*lmServerAddr, grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("fail to dial: %s\n%v", *lmServerAddr, err)
+		log.Fatalf("failed to dial: %s\n%v", *lmServerAddr, err)
 	}
 	defer conn.Close()
 
