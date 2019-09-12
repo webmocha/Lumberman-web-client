@@ -1,0 +1,20 @@
+{
+  "name": "lumberman-web-client",
+  "description": "",
+  "version": "0.1.0",
+  "author": "Sean Nakamura <seanenakamura@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "gatsby develop",
+    "build": "gatsby build"
+  },
+  "dependencies": {
+    "@rebass/grid": "^6.1.0",
+    "@rebass/preset": "^4.0.5",
+    "emotion-theming": "^10.0.17",
+    "gatsby": "^2.15.14",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "rebass": "^4.0.5"
+  }
+}
